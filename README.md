@@ -6,7 +6,7 @@ Supplemental Material for the ESANN 2019 Submission "Preserving privacy using sy
 ### Gaussian Multivariate
 The code for this method is located in the `generators/gaussian_multivariate.py` file. It uses the sci-kit learn Gaussian mixture method.
 ### Wasserstein GAN
-The code for this method is located in the `generators/wgan` folder. This method uses tensorflow to create the GAN. It is based on the methods from the paper "Improved Training of Wasserstein GANs" and the repository from the author [https://github.com/igul222/improved_wgan_training](https://github.com/igul222/improved_wgan_training).
+The code for this method is located in the `generators/wgan.py` file. This method uses tensorflow to create the GAN. It is based on the methods from the paper "Improved Training of Wasserstein GANs" and the repository from the author [https://github.com/igul222/improved_wgan_training](https://github.com/igul222/improved_wgan_training).
 ### Additive Noise Model
 The code for this method is located in the `generators/additive_noise_model.py` file. It usees the random forest classifiers from sci-kit learn.
 ### Parzen Windows
