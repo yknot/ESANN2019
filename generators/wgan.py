@@ -94,7 +94,7 @@ class WGAN():
         self.disc_loss = None
         self.gen_train_op = None
         self.disc_train_op = None
-        self.fixed_noise_samples = None
+        self.rand_noise_samples = None
 
         # define lists to store data
         self.disc_loss_all = []
@@ -224,9 +224,8 @@ class WGAN():
                 self.disc_loss, var_list=disc_params)
 
         # for generating samples
-        fixed_noise = tf.constant(
-            np.random.normal(size=(100000, 100)).astype('float32'))
-        self.fixed_noise_samples = self.generator(fixed_noise)
+        rand_noise = tf.random_normal([100000, 100])
+        self.rand_noise_samples = self.generator(rand_noise)
 
         # with tf.Session() as session:
         #     _ = tf.summary.FileWriter('./logs_new', session.graph)
@@ -251,7 +250,6 @@ class WGAN():
                     disc_loss, _ = session.run(
                         [self.disc_loss, self.disc_train_op],
                         feed_dict={self.real_data: train})
-                    print(f'DISC LOSS ITER {i:>3}: {disc_loss}')
                     disc_loss_list.append(disc_loss)
 
                 # run one generator train iteration
@@ -285,12 +283,12 @@ class WGAN():
                     )
 
                 # if at epoch ending 99999 generate large
-                if epoch % 10000 == 9999:
+                if epoch == (self.params['num_epochs'] - 1):
                     for i in range(10):
-                        samples = session.run(self.fixed_noise_samples)
+                        samples = session.run(self.rand_noise_samples)
                         samples = pd.DataFrame(samples, columns=self.col_names)
                         samples.to_csv(
-                            f'data/samples_new_{epoch}_synthetic_{i}.csv',
+                            f'data/samples_{epoch}_{self.params["critic_iters"]}_{self.params["base_nodes"]}_synthetic_{i}.csv',
                             index=False)
 
                 # update log every 100
@@ -305,10 +303,12 @@ class WGAN():
                             'test_loss': self.disc_loss_test_all
                         }, f)
 
-                if epoch == 500:
-                    break
-
-            saver.save(session, os.path.join(os.getcwd(), 'model.ckpt'))
+            saver.save(
+                session,
+                os.path.join(
+                    os.getcwd(),
+                    f'model_{self.params["critic_iters"]}_{self.params["base_nodes"]}.ckpt'
+                ))
 
 
 if __name__ == '__main__':
