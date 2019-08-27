@@ -177,7 +177,8 @@ class WGAN():
         # create the placeholder for real data and generator for fake
         self.real_data = tf.placeholder(
             tf.float32,
-            shape=[self.params['batch_size'], self.params['n_features']])
+            shape=[self.params['batch_size'], self.params['n_features']],
+            name="RealData")
         # create a noise data set of size of the number of samples by 100
         noise = tf.random_normal([self.params['batch_size'], 100])
         fake_data = self.generator(noise)
@@ -224,11 +225,11 @@ class WGAN():
                 self.disc_loss, var_list=disc_params)
 
         # for generating samples
-        rand_noise = tf.random_normal([100000, 100])
+        rand_noise = tf.random_normal([100000, 100], name="RandomNoise")
         self.rand_noise_samples = self.generator(rand_noise)
 
-        # with tf.Session() as session:
-        #     _ = tf.summary.FileWriter('./logs_new', session.graph)
+        with tf.Session() as session:
+            _ = tf.summary.FileWriter('./logs_new', session.graph)
 
     def train(self):
         """run the training loop"""
@@ -309,6 +310,8 @@ class WGAN():
                     os.getcwd(),
                     f'model_{self.params["critic_iters"]}_{self.params["base_nodes"]}.ckpt'
                 ))
+
+            tf.io.write_graph(session.graph, '.', 'wgan_graph.pbtxt')
 
 
 if __name__ == '__main__':
