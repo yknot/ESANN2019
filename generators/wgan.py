@@ -48,19 +48,22 @@ class WGAN():
         'num_epochs': 100000  # how long to train for
     }
 
-    def __init__(self, filepath, critic_iters=None, base_nodes=None):
+    def __init__(self,
+                 train_filepath,
+                 test_filepath,
+                 critic_iters=None,
+                 base_nodes=None):
         # set custom options
         if critic_iters:
             self.params['critic_iters'] = critic_iters
 
         # read in data and split it
-        scratch = pd.read_csv(filepath)
+        scratch = pd.read_csv(train_filepath)
         self.col_names = scratch.columns
-        data = scratch.values
-        train_data, self.test_data = train_test_split(
-            data, test_size=0.2, random_state=100)
+        train_data = scratch.values
+        self.test_data = pd.read_csv(test_filepath).values
 
-        self.params['n_features'] = data.shape[1]
+        self.params['n_features'] = train_data.shape[1]
         # create 1.5 and 2 times for the generator network dimensions
         self.params['1.5_n_features'] = round(1.5 * self.params['n_features'])
         self.params['2_n_features'] = 2 * self.params['n_features']
@@ -72,7 +75,7 @@ class WGAN():
         self.params['4_base_nodes'] = 4 * self.params[
             'base_nodes']  # 4 x base for discriminator
 
-        self.params['n_observations'] = data.shape[0]
+        self.params['n_observations'] = train_data.shape[0]
         # number of observations divided by the number of critic iterations
         # rounded down to the nearest multiple of 100
         self.params['batch_size'] = int(
@@ -194,7 +197,7 @@ class WGAN():
         # add the gradient penalty to disc loss
         # create random split of data
         alpha = tf.random_uniform(
-            shape=[self.params['batch_size'], 1], minval=0, maxval=0)
+            shape=[self.params['batch_size'], 1], minval=0, maxval=1)
 
         # combine real and fake
         interpolates = (alpha * self.real_data) + ((1 - alpha) * fake_data)
@@ -321,7 +324,8 @@ if __name__ == '__main__':
     tf.reset_default_graph()
     # create object
     wgan = WGAN(
-        filepath='data/mimic_train_sdv.csv',
+        train_filepath='data/mimic_train_sdv.csv',
+        test_filepath='data/mimic_test_sdv.csv',
         critic_iters=int(sys.argv[1]),
         base_nodes=int(sys.argv[2]))
     # define the computation graph
