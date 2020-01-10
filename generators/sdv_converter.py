@@ -157,13 +157,17 @@ def ordinal(col, limits=None):
                                                  (b - mu) / sigma, mu, sigma)
             a = b
 
-        # # convert values that don't exist in orig col to most common
-        # col = col.copy()  # to lose copy warnings
-        # common = col.value_counts().index[0]
-        # for cat in col.unique():
-        #     if cat not in distributions:
-        #         col.loc[col == cat] = common
-
+        # convert values that don't exist to nearest value
+        col = col.copy()
+        max_val = max(distributions.keys())
+        min_val = min(distributions.keys())
+        for cat in col.unique():
+            if cat not in distributions:
+                if cat > max_val:
+                    col.loc[col == cat] = max_val
+                else:
+                    col.loc[col == cat] = min_val
+        
         return col.apply(lambda x: distributions[x].rvs()), None
     # get categories, ensures sort by value and then name to tiebreak
     categories = col.value_counts()
