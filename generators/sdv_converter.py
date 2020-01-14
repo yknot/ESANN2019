@@ -12,7 +12,7 @@ from sklearn.linear_model import LinearRegression
 def fix_ages(df):
     """fix the negative ages by making them the max 90"""
     age_mask = df.AGE < 0
-    df.loc[age_mask, 'AGE'] = 90
+    df.loc[age_mask, "AGE"] = 90
     return df
 
 
@@ -43,7 +43,7 @@ def boost(df, lim, cutoff=0.1):
 def one_hot_encode(df):
     """convert all categorical variables into one hot encodings"""
     # drop id/date cols
-    category_cols = [c for c in df.columns if df[c].dtype.name == 'object']
+    category_cols = [c for c in df.columns if df[c].dtype.name == "object"]
     df = pd.get_dummies(df, columns=category_cols, prefix=category_cols)
     return df
 
@@ -68,11 +68,11 @@ def impute_column(df, c):
     # get mask for data to impute
     impute_mask = y.isna()
     # if y is continuous then use linear regression
-    if y.dtype.name == 'float64':
+    if y.dtype.name == "float64":
         clf = LinearRegression()
-    elif y.dtype.name == 'object':
+    elif y.dtype.name == "object":
         # Train KNN learner
-        clf = KNeighborsClassifier(3, weights='distance')
+        clf = KNeighborsClassifier(3, weights="distance")
         # le = LabelEncoder()
         # le.fit(df[col])
     else:
@@ -85,7 +85,7 @@ def impute_column(df, c):
 
 def fix_na_values(df):
     """run of imputing columns with missing values"""
-    ignored = ['SUBJECT_ID', 'HADM_ID', 'ADMITTIME', 'DISCHTIME']
+    ignored = ["SUBJECT_ID", "HADM_ID", "ADMITTIME", "DISCHTIME"]
     df_core = df.drop(ignored, axis=1)
 
     while df_core.isna().sum().sum():
@@ -107,8 +107,9 @@ def categorical(col, limits=None):
         for b, cat in limits.items():
             b = float(b)
             mu, sigma = (a + b) / 2, (b - a) / 6
-            distributions[cat] = stats.truncnorm((a - mu) / sigma,
-                                                 (b - mu) / sigma, mu, sigma)
+            distributions[cat] = stats.truncnorm(
+                (a - mu) / sigma, (b - mu) / sigma, mu, sigma
+            )
             a = b
 
         # convert values that don't exist in orig col to most common
@@ -121,8 +122,8 @@ def categorical(col, limits=None):
         return col.apply(lambda x: distributions[x].rvs()), None
     # get categories, ensures sort by value and then name to tiebreak
     series = col.value_counts(normalize=True)
-    tmp = pd.DataFrame({'names': series.index, 'pcts': series.values})
-    tmp = tmp.sort_values(['pcts', 'names'], ascending=[False, True])
+    tmp = pd.DataFrame({"names": series.index, "pcts": series.values})
+    tmp = tmp.sort_values(["pcts", "names"], ascending=[False, True])
     categories = pd.Series(tmp.pcts.values, tmp.names.values)
 
     # get distributions to pull from
@@ -135,8 +136,9 @@ def categorical(col, limits=None):
         b = a + val
         # create the distribution to sample from
         mu, sigma = (a + b) / 2, (b - a) / 6
-        distributions[cat] = stats.truncnorm((a - mu) / sigma,
-                                             (b - mu) / sigma, mu, sigma)
+        distributions[cat] = stats.truncnorm(
+            (a - mu) / sigma, (b - mu) / sigma, mu, sigma
+        )
         limits[b] = cat
         a = b
 
@@ -153,8 +155,9 @@ def ordinal(col, limits=None):
         for b, cat in limits.items():
             b = float(b)
             mu, sigma = (a + b) / 2, (b - a) / 6
-            distributions[cat] = stats.truncnorm((a - mu) / sigma,
-                                                 (b - mu) / sigma, mu, sigma)
+            distributions[cat] = stats.truncnorm(
+                (a - mu) / sigma, (b - mu) / sigma, mu, sigma
+            )
             a = b
 
         # convert values that don't exist to nearest value
@@ -167,7 +170,7 @@ def ordinal(col, limits=None):
                     col.loc[col == cat] = max_val
                 else:
                     col.loc[col == cat] = min_val
-        
+
         return col.apply(lambda x: distributions[x].rvs()), None
     # get categories, ensures sort by value and then name to tiebreak
     categories = col.value_counts()
@@ -180,8 +183,7 @@ def ordinal(col, limits=None):
 
     # additive smoothing for 0 counts
     alpha = 1
-    new_vals = (categories.values + alpha) / (len(col) +
-                                              (alpha * len(categories)))
+    new_vals = (categories.values + alpha) / (len(col) + (alpha * len(categories)))
 
     # create new categories
     categories = pd.Series(new_vals, index=categories.index)
@@ -196,8 +198,9 @@ def ordinal(col, limits=None):
         b = a + val
         # create the distribution to sample from
         mu, sigma = (a + b) / 2, (b - a) / 6
-        distributions[cat] = stats.truncnorm((a - mu) / sigma,
-                                             (b - mu) / sigma, mu, sigma)
+        distributions[cat] = stats.truncnorm(
+            (a - mu) / sigma, (b - mu) / sigma, mu, sigma
+        )
         limits[b] = cat
         a = b
 
@@ -288,16 +291,16 @@ def undo_categorical(col, lim):
 def undo_numeric(col, min_col, max_col, discrete=None):
     """normalize a numeric column"""
     if discrete:
-        return (((max_col - min_col) * col) + min_col).round().astype('int')
+        return (((max_col - min_col) * col) + min_col).round().astype("int")
     return ((max_col - min_col) * col) + min_col
 
 
 def read_data(filename):
     """read in the file"""
     data = None
-    if filename.endswith('.csv'):
+    if filename.endswith(".csv"):
         data = pd.read_csv(filename)
-    elif filename.endswith('.npy'):
+    elif filename.endswith(".npy"):
         data = pd.DataFrame(np.load(filename))
 
     # check if file can be read
@@ -318,14 +321,14 @@ def encode(df, limits=None, min_max=None, beta=False):
         already_exists = False
     for c in df.columns:
         # if object
-        if df[c].dtype.char == 'O':
+        if df[c].dtype.char == "O":
             if already_exists:
                 df[c], _ = categorical(df[c], limits[c])
             else:
                 df[c], lim = categorical(df[c])
                 limits[c] = lim
         # if int
-        elif df[c].dtype.char == 'l':
+        elif df[c].dtype.char == "l" or df[c].dtype.char == "q":
             # if binary
             if set(df[c].unique()).issubset(set((0, 1))):
                 if already_exists:
@@ -347,7 +350,7 @@ def encode(df, limits=None, min_max=None, beta=False):
                     df[c], lim = ordinal(df[c])
                     limits[c] = lim
         # if boolean
-        elif df[c].dtype.char == '?':
+        elif df[c].dtype.char == "?":
             if already_exists:
                 if beta:
                     df[c], _ = binary(df[c], limits[c])
@@ -361,7 +364,7 @@ def encode(df, limits=None, min_max=None, beta=False):
                 limits[c] = lim
 
         # if decimal
-        elif df[c].dtype.char == 'd':
+        elif df[c].dtype.char == "d":
             if already_exists:
                 df[c], _, _ = numeric(df[c], min_max[c])
             else:
@@ -385,7 +388,7 @@ def decode(df_new, df_orig_cols, limits, min_max):
 
 def save_files(df, prefix, limits=None, min_max=None, cols=False):
     """save the sdv file and decoders"""
-    df.to_csv(f'{prefix}_sdv.csv', index=False)
+    df.to_csv(f"{prefix}_sdv.csv", index=False)
     if cols:
         json.dump(df.columns.tolist(), open(f"{prefix}.cols", "w"))
     if limits:
@@ -405,9 +408,9 @@ def read_decoders(prefix, npy_file):
         cols = json.load(open(f"{prefix}.cols"))
     except FileNotFoundError:
         cols = None
-    if npy_file.endswith('.csv'):
+    if npy_file.endswith(".csv"):
         npy = pd.read_csv(npy_file)
-    elif npy_file.endswith('.npy'):
+    elif npy_file.endswith(".npy"):
         npy = np.load(npy_file)
     else:
         npy = None
@@ -418,69 +421,68 @@ def read_decoders(prefix, npy_file):
 def parse_arguments(parser):
     """parser for arguments and options"""
     parser.add_argument(
-        'data_file',
-        type=str,
-        metavar='<data_file>',
-        help='The data to transform')
-    subparsers = parser.add_subparsers(dest='op')
-    subparsers.add_parser('encode')
-    subparsers.add_parser('test')
+        "data_file", type=str, metavar="<data_file>", help="The data to transform"
+    )
+    subparsers = parser.add_subparsers(dest="op")
+    subparsers.add_parser("encode")
+    subparsers.add_parser("test")
 
-    parser_decode = subparsers.add_parser('decode')
+    parser_decode = subparsers.add_parser("decode")
     parser_decode.add_argument(
-        'npy_file',
-        type=str,
-        metavar='<npy_file>',
-        help='numpy file to decode')
+        "npy_file", type=str, metavar="<npy_file>", help="numpy file to decode"
+    )
     parser.add_argument(
-        '--fix_ages',
-        dest='ages',
-        action='store_const',
+        "--fix_ages",
+        dest="ages",
+        action="store_const",
         const=True,
         default=False,
-        help='fix negative ages')
+        help="fix negative ages",
+    )
     parser.add_argument(
-        '--impute',
-        dest='impute',
-        action='store_const',
+        "--impute",
+        dest="impute",
+        action="store_const",
         const=True,
         default=False,
-        help='impute missing values')
+        help="impute missing values",
+    )
     parser.add_argument(
-        '--beta',
-        dest='beta',
-        action='store_const',
+        "--beta",
+        dest="beta",
+        action="store_const",
         const=True,
         default=False,
-        help='use beta distribution')
+        help="use beta distribution",
+    )
     parser.add_argument(
-        '--boost',
-        dest='boost',
-        action='store_const',
+        "--boost",
+        dest="boost",
+        action="store_const",
         const=True,
         default=False,
-        help='boost 1% and lower samples')
-    parser.add_argument(
-        '--encoder_file')  #, type=str, metavar='<encoder_file>',
-    #help='use encoder file')
+        help="boost 1% and lower samples",
+    )
+    parser.add_argument("--encoder_file")  # , type=str, metavar='<encoder_file>',
+    # help='use encoder file')
 
     return parser.parse_args()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # read in arguments
     args = parse_arguments(argparse.ArgumentParser())
 
-    if args.op == 'test':
+    if args.op == "test":
         # open and read the data file
         df_raw = read_data(args.data_file)
 
         df_converted, lims, mm = encode(df_raw, beta=args.beta)
         df_converted = decode(df_converted, df_raw, lims, mm)
         assert (df_converted == df_raw).all().all()
-        print('Test Passed')
+        print("Test Passed")
 
-    elif args.op == 'encode':
+    elif args.op == "encode":
         # open and read the data file
         df_raw = read_data(args.data_file)
 
@@ -494,7 +496,13 @@ if __name__ == '__main__':
             assert df_raw.isna().sum().sum() == 0
 
         if args.encoder_file:
-            lims, mms, _, _ = read_decoders(args.encoder_file, '')
+            enc_file = (
+                args.encoder_file[:-4]
+                if args.encoder_file.endswith(".csv")
+                else args.encoder_file
+            )
+
+            lims, mms, _, _ = read_decoders(enc_file, "")
             df_converted, _, _ = encode(df_raw, lims, mms, beta=args.beta)
             save_files(df_converted, args.data_file[:-4])
 
@@ -502,9 +510,8 @@ if __name__ == '__main__':
             df_converted, lims, mm = encode(df_raw, beta=args.beta)
             save_files(df_converted, args.data_file[:-4], lims, mm, True)
 
-    elif args.op == 'decode':
-        lims, mm, cols, npy_new = read_decoders(args.data_file[:-4],
-                                                args.npy_file)
+    elif args.op == "decode":
+        lims, mm, cols, npy_new = read_decoders(args.data_file[:-4], args.npy_file)
         if not cols:
             # open and read the data file
             df_raw = read_data(args.data_file)
@@ -512,5 +519,4 @@ if __name__ == '__main__':
 
         df_converted = decode(np.clip(npy_new, 0, 1), cols, lims, mm)
         # save decoded
-        df_converted.to_csv(
-            args.data_file[:-4] + '_synthetic.csv', index=False)
+        df_converted.to_csv(args.data_file[:-4] + "_synthetic.csv", index=False)
