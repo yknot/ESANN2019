@@ -1,5 +1,7 @@
 # ESANN2019
 
+**Updated Repo [TheRensselaerIDEA/synthetic_data](https://github.com/TheRensselaerIDEA/synthetic_data)**
+
 Supplemental Material for the ESANN 2019 Submission "Preserving privacy using synthetic data models and applications in health informatics education". This includes a supplemental section to the paper located at `supplemental_material.pdf`. There is also code for all of the generative methods and metrics.
 
 ## Generative Methods Code
